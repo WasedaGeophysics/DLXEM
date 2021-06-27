@@ -2,7 +2,8 @@
 RESOLVE_BOOKPURNONG/
 RESOLVE_TOHOKU_JP/
 
-
+# Mac
+.DS_Store
 
 # vscode
 .vscode/
