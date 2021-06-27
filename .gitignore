@@ -1,3 +1,24 @@
+#DB
+RESOLVE_BOOKPURNONG/
+RESOLVE_TOHOKU_JP/
+
+
+
+# vscode
+.vscode/
+
+# Jupyter
+Archive/
+.ipynb_checkpoints/
+
+# data
+*.json
+*.csv
+*.h5
+*.npy
+index.txt
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
