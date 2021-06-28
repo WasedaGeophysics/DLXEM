@@ -12,6 +12,9 @@ RESOLVE_TOHOKU_JP/
 Archive/
 .ipynb_checkpoints/
 
+# MyPython
+myviz.py
+
 # data
 *.json
 *.csv
