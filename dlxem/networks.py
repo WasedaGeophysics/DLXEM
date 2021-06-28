@@ -1,6 +1,6 @@
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.optimizers import Adam
 
 def get_dnn(input_dim, output_dim):
 
