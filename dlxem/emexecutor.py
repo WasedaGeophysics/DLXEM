@@ -25,7 +25,7 @@ class Resolve1D:
         if func == None:
             func = self.default
         iters = np.split(np.arange(size), nsplit)
-        ncpu = cpu_count()
+        ncpu = 20
         with futures.ProcessPoolExecutor(max_workers=ncpu) as executor:
             result_maker = executor.map(func, iters)
 

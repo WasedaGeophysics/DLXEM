@@ -22,7 +22,7 @@ class Subsurface1D:
         # Random Auto Configuration
         normal, fixed, activation = np.random.randint(0, 2, 3)
         # 移動平均による平滑化の回数
-        smooth_iter = np.random.choice([2, 3, 5, 10, 20, 50])
+        smooth_iter = np.random.choice([2, 3, 5, 10, 20, 100])
         # 層数分の指数を乱数生成
         if normal:
             #正規分布
