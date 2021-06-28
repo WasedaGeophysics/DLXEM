@@ -1,16 +1,17 @@
 import numpy as np
 from dlxem import w1dem as w1
 
-def resolve(em, sf, height):
+def resolve(thickness, resistivity, height, span, freqs,
+         add_noise=True, to_ppm=True, noise_level=[10, 10, 20, 40, 50]):
     """
     return : ndarray 
         [Re(hz1), Re(hz2), Re(hz3), Re(hz4), Re(hz5), 
          Im(hz1), Im(hz2), Im(hz3), Im(hz4), Im(hz5), ]
     """
     #フォワード計算
-    resistivity = sf.resistivity
-    thickness = sf.thickness
-    rx = [em.span]
+    resistivity = resistivity
+    thickness = thickness
+    rx = [span]
     ry = [0]
     rz = [-height]
     tx = [0]
@@ -20,7 +21,7 @@ def resolve(em, sf, height):
     fdtd = 1
     dbdt = 1
     dipole_mom = 1
-    freqs = np.array(em.freqs)
+    freqs = np.array(freqs)
     plot_number = len(freqs)
     displacement_current = False
     w1fdem = w1.Fdem(rx, ry, rz, tx, ty, tz, resistivity, thickness, hankel_filter, fdtd, dbdt, plot_number
@@ -39,14 +40,14 @@ def resolve(em, sf, height):
     # bookpurnong_noise_levels = [10, 10, 20, 40, 50]
 
     # ノイズ付加
-    if em.add_noise:
-        for index, noise_level in enumerate(em.noise_level):
+    if add_noise:
+        for index, noise_level in enumerate(noise_level):
             noise = np.random.normal(0, noise_level)
             real_ppm[index] = real_ppm[index] + noise
             imag_ppm[index] = imag_ppm[index] + noise
 
     # 1次磁場, 2次磁場に戻す
-    if not em.to_ppm:
+    if not to_ppm:
         raw_real = real_ppm * primary_field * 1e-6 + primary_field
         raw_imag = imag_ppm * primary_field * 1e-6
         resp = np.hstack([raw_real, raw_imag])

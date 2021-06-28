@@ -46,7 +46,8 @@ class Resolve1D:
             height = (height_max - height_min) * np.random.rand() + height_min
 
             #RESOLVEのノイズ付応答を計算
-            resp = fwd.resolve(self, hml, height)
+            resp = fwd.resolve(hml.thickness, hml.resistivity, height, self.span, self.freqs, 
+                            add_noise=self.add_noise, to_ppm=self.to_ppm, noise_level=self.noise_level)
 
             #説明変数x, 目的変数yを格納
             xy = np.r_[resp, height, hml.resistivity]
