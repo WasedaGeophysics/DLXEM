@@ -13,7 +13,6 @@ Archive/
 .ipynb_checkpoints/
 
 # MyPython
-myviz.py
 
 # data
 *.json
