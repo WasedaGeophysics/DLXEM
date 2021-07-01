@@ -16,6 +16,8 @@ class Subsurface1D:
             self.resistivity = self.smooth_uniform()
         elif mode == 'ymtmt':
             self.resistivity = np.array(self.ymtmt())
+        elif mode == 'normal':
+            self.resistivity = self.normal()
 
     def smooth_mix(self):
         size = len(self.thickness) + 1
@@ -35,7 +37,7 @@ class Subsurface1D:
         exponent0 = exponent.copy()
         fixed_index = np.random.randint(1, size-1)
         for i in range(smooth_iter):
-            exponent = self.logmoveavg(exponent)
+            exponent = self.movearg(exponent)
             if fixed:
                 exponent[fixed_index] = exponent0[fixed_index]
 
@@ -58,7 +60,7 @@ class Subsurface1D:
         exponent0 = exponent.copy()
         fixed_index = np.random.randint(1, size-1)
         for i in range(smooth_iter):
-            exponent = self.logmoveavg(exponent)
+            exponent = self.movearg(exponent)
             if fixed and ((smooth_iter - i) <= 2):
                 exponent[fixed_index] = exponent0[fixed_index]
 
@@ -81,7 +83,7 @@ class Subsurface1D:
         exponent0 = exponent.copy()
         fixed_index = np.random.randint(1, size-1)
         for i in range(smooth_iter):
-            exponent = self.logmoveavg(exponent)
+            exponent = self.movearg(exponent)
             if fixed and ((smooth_iter - i) <= 2):
                 exponent[fixed_index] = exponent0[fixed_index]
 
@@ -110,6 +112,35 @@ class Subsurface1D:
             res = None
         return res
 
+    def normal(self):
+        size = len(self.thickness) + 1
+        exponent = np.array([])
+        # 移動平均による平滑化の回数
+        smooth_iter = np.random.choice([0, 1, 5, 10])
+        abnormal_std = [0.5, 0.7, 0.9, 1.0, 1.2]
+        natural_std = [0.01, 0.1, 0.2, 0.3, 0.4]
+        level = np.random.rand() - 0.5
+        while True:
+            count = len(exponent)
+            empty = size - count
+            fill = int(np.random.lognormal(1.2, 0.8)) + 1
+            if fill <= empty:
+                abnormal = np.random.choice([False, True], p=[0.7, 0.3])
+                if abnormal:
+                    normal_std = np.random.choice(abnormal_std)
+                else:
+                    normal_std = np.random.choice(natural_std)
+                exp_add = np.ones(fill) * (np.random.normal(level, normal_std) + 2)
+                exponent = np.append(exponent, exp_add)
+                empty -= fill
+            else:
+                continue
+            if empty == 0:
+                break
+        for i in range(smooth_iter):
+            exponent = self.movearg(exponent)
+        res = 10 ** exponent
+        return res
 
     def random_resistivity_logscale(self, num):
         """
@@ -138,7 +169,7 @@ class Subsurface1D:
         return random_list
     
     @staticmethod
-    def logmoveavg(x):
+    def movearg(x):
         span = 3
         length = len(x)
         y = x.copy()

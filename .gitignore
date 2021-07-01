@@ -20,8 +20,9 @@ Archive/
 *.tsv
 *.h5
 *.npy
-index.txt
-
+*.png
+*.jpg
+*.gif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
