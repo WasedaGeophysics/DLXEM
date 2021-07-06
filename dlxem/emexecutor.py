@@ -7,11 +7,10 @@ from dlxem import forward as fwd
 class Resolve1D:
     def __init__(
             self, 
-            thicks, res_range, height_range, freqs, span,
+            thicks, height_range, freqs, span,
             to_ppm=True, add_noise=False, noise_level=None,
-            random_mode='ymtmt', ground_char = 'r'):
+            random_mode='ymtmt'):
         self.thicks = thicks
-        self.res_range = res_range
         self.height_range = height_range
         self.freqs = freqs
         self.span = span
@@ -19,7 +18,6 @@ class Resolve1D:
         self.add_noise = add_noise
         self.noise_level = noise_level
         self.random_mode = random_mode
-        self.ground_char = ground_char
 
     def multi_process(self, size, nsplit, func=None):
         if func == None:

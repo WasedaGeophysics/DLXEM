@@ -116,16 +116,16 @@ class Subsurface1D:
         size = len(self.thickness) + 1
         exponent = np.array([])
         # 移動平均による平滑化の回数
-        smooth_iter = np.random.choice([0, 1, 5, 10])
-        abnormal_std = [0.5, 0.7, 0.9, 1.0, 1.2]
-        natural_std = [0.01, 0.1, 0.2, 0.3, 0.4]
-        level = np.random.rand() - 0.5
+        smooth_iter = np.random.choice([1, 1, 2, 3, 5, 10])
+        abnormal_std = [0.7, 0.9, 1.0, 1.2]
+        natural_std = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5]
+        level = 2.4 * np.random.rand() - 1.2
         while True:
             count = len(exponent)
             empty = size - count
             fill = int(np.random.lognormal(1.2, 0.8)) + 1
             if fill <= empty:
-                abnormal = np.random.choice([False, True], p=[0.7, 0.3])
+                abnormal = np.random.choice([False, True], p=[0.8, 0.2])
                 if abnormal:
                     normal_std = np.random.choice(abnormal_std)
                 else:

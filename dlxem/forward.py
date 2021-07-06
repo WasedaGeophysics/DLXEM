@@ -6,7 +6,8 @@ def resolve(thickness, resistivity, height, span, freqs,
     """
     return : ndarray 
         [Re(hz1), Re(hz2), Re(hz3), Re(hz4), Re(hz5), 
-         Im(hz1), Im(hz2), Im(hz3), Im(hz4), Im(hz5), ]
+         Im(hz1), Im(hz2), Im(hz3), Im(hz4), Im(hz5), 
+         Height, Resistivity1,  ...  , ResistivityN]
     """
     #フォワード計算
     resistivity = resistivity

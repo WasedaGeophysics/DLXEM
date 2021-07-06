@@ -2,6 +2,9 @@
 RESOLVE_BOOKPURNONG/
 RESOLVE_TOHOKU_JP/
 
+#environment
+environment/tnishino
+
 # Mac
 .DS_Store
 

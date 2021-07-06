@@ -5,29 +5,26 @@ from dlxem import forward
 class resolve:
     #== SUMPLOT =========================#
     @classmethod
-    def sumplot(cls, thicks, pred_res, true_res, height, span, freqs, cfreq_size, orig_emf, ppm=True, noised=False, log_depth=False):
-        fig = plt.figure(figsize=(18, 21), dpi=100)
-        ax1 = fig.add_subplot(3,2,1)
-        ax2 = fig.add_subplot(3,2,2)
-        ax3 = fig.add_subplot(3,2,3)
-        ax4 = fig.add_subplot(3,2,4)
-        ax5 = fig.add_subplot(3,2,5)
-        ax6 = fig.add_subplot(3,2,6)
+    def sumplot(cls, thicks, pred_res, true_res, height, span, freqs, cfreq_range, orig_emf, ppm=True, noised=False, log_depth=False):
+        fig = plt.figure(figsize=(25, 7), dpi=100)
+        ax1 = fig.add_subplot(1,3,1)
+        ax2 = fig.add_subplot(1,3,2)
+        ax3 = fig.add_subplot(1,3,3)
 
         cls.resistivity_step(ax1, thicks, pred_res, true_res, log_depth=log_depth)
-        cls.resistivity_error_step(ax2, thicks, pred_res, true_res, log_depth=log_depth)
 
-        cfreq_min = 1
-        cfreq_max = 9
+        cfreq_min = cfreq_range[0]
+        cfreq_max = cfreq_range[1]
+        cfreq_size = 300
         cfreqs = np.logspace(cfreq_min, cfreq_max, cfreq_size)
         freq_size = len(freqs)
 
-        if ppm == False:
-            true_emf = forward.resolve(thicks, true_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
-            pred_emf = forward.resolve(thicks, pred_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
-            true_cemf = forward.resolve(thicks, true_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
-            pred_cemf = forward.resolve(thicks, pred_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
+        true_emf = forward.resolve(thicks, true_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
+        pred_emf = forward.resolve(thicks, pred_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
+        true_cemf = forward.resolve(thicks, true_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
+        pred_cemf = forward.resolve(thicks, pred_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
 
+        if ppm == False:
             primary_field = -1 / (4 * np.pi * span ** 3)
             real_ppm = orig_emf[:freq_size]
             imag_ppm = orig_emf[freq_size:]
@@ -35,27 +32,37 @@ class resolve:
             raw_imag = imag_ppm * primary_field * 1e-6
             orig_emf = np.hstack([raw_real, raw_imag])
 
-        else:
-            true_emf = forward.resolve(thicks, true_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
-            pred_emf = forward.resolve(thicks, pred_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
-            true_cemf = forward.resolve(thicks, true_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
-            pred_cemf = forward.resolve(thicks, pred_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
-
-        cls.emfield_real(ax3, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=noised)
-        cls.emfield_imag(ax5, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=noised)
-        cls.emfield_error(ax4, ax6, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=noised)
-
+        cls.emfield(ax2, ax3, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=noised)
         return fig
 
     @staticmethod
     def resistivity_step(ax, thicks, pred_res, true_res, log_depth=False):
         thicks_add = [*thicks, thicks[-1]]
-        #thicks_add = thicks
-        pr = [*pred_res, pred_res[-1]]
-        tr = [*true_res, true_res[-1]]
+        thicks_add2 = [*thicks_add, 1]
         depth = [1e-5, *np.cumsum(thicks_add)]
-        ax.step(tr, depth, linewidth=0.6, label='label')
-        ax.step(pr, depth, linewidth=0.8, label='predict')
+        pr = np.array([*pred_res, pred_res[-1]])
+        tr = np.array([*true_res, true_res[-1]])
+        abs_err = pr-tr
+        abs_err_p = []
+        abs_err_n = []
+        ii = 0
+        for err in abs_err:
+            if err < 0:
+                abs_err_p.append(0)
+                abs_err_n.append(-err)
+            else:
+                abs_err_p.append(err)
+                abs_err_n.append(0)
+
+        ax.barh(depth, abs_err_p, thicks_add2, align='edge', color='#8ed', edgecolor='#8ed', alpha=0.3, label='difference')
+        ax.barh(depth, abs_err_n, thicks_add2, align='edge', color='#8ed', edgecolor='#8ed', alpha=0.3)
+        ax.set_xscale('log')
+        ax.set_xlim(1e-2, 1e6)
+        ax.set_xlabel('difference of resistivity ${\mathrm{(\Omega \cdot m)}}$')
+        ax.legend(loc='upper right')
+
+        ax.step(tr, depth, c='k', linewidth=0.6, label='label')
+        ax.step(pr, depth, c='r', linewidth=0.8, label='predict')
         ax.set_xscale('log')
         ax.set_xlim(1e-2, 1e6)
         ax.set_xlabel('resistivity ${\mathrm{(\Omega \cdot m)}}$')
@@ -63,92 +70,85 @@ class resolve:
         ax.set_ylabel('depth[m]')
         if log_depth:
             ax.set_yscale('log')
-            ax.set_ylim(10**(-1.5), depth[-1])
+            ax.set_ylim(depth[1]/1.25, depth[-1])
         ax.invert_yaxis()
         ax.grid(which='major',color='#ccc',linestyle='-')
         ax.grid(which='minor',color='#eee',linestyle='--')
-        ax.legend()
+        ax.legend(loc='lower right')
         ax.set_title('${ρ_{\mathrm{pred}}}$ and ${ρ_{\mathrm{true}}}$')
 
     @staticmethod
-    def resistivity_error_step(ax, thicks, pred_res, true_res, log_depth=False):
-        thicks_add = [*thicks, thicks[-1]]
-        #thicks_add = thicks
-        pr = np.array([*pred_res, pred_res[-1]])
-        tr = np.array([*true_res, true_res[-1]])
-        depth = [1e-5, *np.cumsum(thicks_add)]
-        abs_err = abs(pr-tr)
+    def emfield(ax1, ax2, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=False):
+        cfreqsize = len(cfreqs)
+        freqsize = len(freqs)
+        thicks = []
+        for i in range(cfreqsize-1):
+            thicks.append(cfreqs[i+1] - cfreqs[i])
+        thicks = np.array([*thicks, thicks[-1]])
+        emf_err = abs(pred_emf - true_emf) / abs(true_emf) * 100
+        cemf_err = (pred_cemf - true_cemf) / abs(true_cemf) * 100
+        cemf_err_p = []
+        cemf_err_n = []
 
-        ax.step(abs_err, depth, c='navy', linewidth=0.5, label='Absolute Error')
-        #low = 10 ** (np.log10(min(abs_err))-0.1)
-        #high = max(abs_err) * 1.1
-        #ax.set_xlim(low, high)
-        ax.set_xlim(-2, 6)
-        ax.set_xscale('log')
-        ax.set_xlabel('Absolute Error ${\mathrm{(\Omega \cdot m)}}$')
-        ax.set_ylim(0, depth[-1])
-        ax.set_ylabel('depth[m]')
-        if log_depth:
+        for err in cemf_err:
+            if err < 0:
+                cemf_err_p.append(0)
+                cemf_err_n.append(-err)
+            else:
+                cemf_err_p.append(err)
+                cemf_err_n.append(0)
+
+        if noised:
+            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0, label='true / original noised')
+            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0)
+            ax2.plot(freqs, orig_emf[freqsize:], 'C2', marker='x', linewidth=0, label='true / original noised')
+            ax2.plot(freqs, -orig_emf[freqsize:], 'C2', marker='x', linewidth=0)
+
+        ax1.plot(cfreqs, true_cemf[:cfreqsize], 'k', linewidth=0.75, label='true / denoised')
+        ax1.plot(cfreqs, -true_cemf[:cfreqsize], 'k', linewidth=0.75)
+        ax1.plot(freqs, true_emf[:freqsize], 'k', marker='.', linewidth=0)
+        ax1.plot(freqs, -true_emf[:freqsize], 'k', marker='.', linewidth=0)
+        ax2.plot(cfreqs, true_cemf[cfreqsize:], 'k', linewidth=0.75, label='true / denoised')
+        ax2.plot(cfreqs, -true_cemf[cfreqsize:], 'k', linewidth=0.75)
+        ax2.plot(freqs, true_emf[freqsize:], 'k', marker='.', linewidth=0)
+        ax2.plot(freqs, -true_emf[freqsize:], 'k', marker='.', linewidth=0)
+
+        ax1.plot(cfreqs, pred_cemf[:cfreqsize], 'r', linewidth=0.75, label='predicted / denoised')
+        ax1.plot(cfreqs, -pred_cemf[:cfreqsize], 'r', linewidth=0.75)
+        ax1.plot(freqs, pred_emf[:freqsize], 'r', marker='+', linewidth=0)
+        ax1.plot(freqs, -pred_emf[:freqsize], 'r', marker='+', linewidth=0)
+        ax2.plot(cfreqs, pred_cemf[cfreqsize:], 'r', linewidth=0.75, label='predicted / denoised')
+        ax2.plot(cfreqs, -pred_cemf[cfreqsize:], 'r', linewidth=0.75)
+        ax2.plot(freqs, pred_emf[freqsize:], 'r', marker='+', linewidth=0)
+        ax2.plot(freqs, -pred_emf[freqsize:], 'r', marker='+', linewidth=0)
+
+        ax1b = ax1.twinx()
+        ax2b = ax2.twinx()
+
+        ax1b.bar(cfreqs, cemf_err_p[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
+        ax1b.bar(cfreqs, cemf_err_n[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3)
+        ax1b.plot(freqs, emf_err[:freqsize], c='#8ed', marker='.', linewidth=0)
+        ax2b.bar(cfreqs, cemf_err_p[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
+        ax2b.bar(cfreqs, cemf_err_n[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3)
+        ax2b.plot(freqs, emf_err[freqsize:], c='#8ed', marker='.', linewidth=0)
+
+        for ax in [ax1b, ax2b]:
+            ax.set_ylim(0, 300)
+            ax.set_ylabel('Relative Error (%)')
+
+        ax1.set_title('Real Part')
+        for ax in [ax1, ax2]:
+            ax.set_xscale('log')
             ax.set_yscale('log')
-            ax.set_ylim(10**(-1.5), depth[-1])
-        ax.invert_yaxis()
-        ax.grid(which='major',color='#ccc',linestyle='-')
-        ax.grid(which='minor',color='#eee',linestyle='--')
-        ax.set_title('Absolute Error between ${ρ_{\mathrm{pred}}}$ and ${ρ_{\mathrm{true}}}$')
-
-    @staticmethod
-    def emfield_real(ax, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=False):
-        cfreqsize = len(cfreqs)
-        freqsize = len(freqs)
-
-        if noised:
-            ax.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0, label='true / original noised')
-            ax.plot(freqs, -orig_emf[:freqsize], 'C2', marker='x', linewidth=0)
-
-        ax.plot(cfreqs, true_cemf[:cfreqsize], 'C0', linewidth=0.75, label='true / denoised')
-        ax.plot(cfreqs, -true_cemf[:cfreqsize], 'C0--', linewidth=0.75)
-        ax.plot(freqs, true_emf[:freqsize], 'C0', marker='.', linewidth=0)
-        ax.plot(freqs, -true_emf[:freqsize], 'C0', marker='.', linewidth=0)
-
-        ax.plot(cfreqs, pred_cemf[:cfreqsize], 'C1', linewidth=0.75, label='predicted / denoised')
-        ax.plot(cfreqs, -pred_cemf[:cfreqsize], 'C1--', linewidth=0.75)
-        ax.plot(freqs, pred_emf[:freqsize], 'C1', marker='+', linewidth=0)
-        ax.plot(freqs, -pred_emf[:freqsize], 'C1', marker='+', linewidth=0)
-
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.legend()
-        ax.set_xlabel('Frequecy (Hz)')
-        ax.set_ylabel('Secondary field $h_z$ (ppm)')
-        ax.grid(which='major',color='#ccc',linestyle='-')
-        ax.grid(which='minor',color='#eee',linestyle='--')
-        ax.set_title('Real Part')
-
-    @staticmethod
-    def emfield_imag(ax, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=False):
-        cfreqsize = len(cfreqs)
-        freqsize = len(freqs)
-        if noised:
-            ax.plot(freqs, orig_emf[freqsize:], 'C2', marker='x', linewidth=0, label='true / original noised')
-            ax.plot(freqs, -orig_emf[freqsize:], 'C2', marker='x', linewidth=0)
-
-        ax.plot(cfreqs, true_cemf[cfreqsize:], 'C0', linewidth=0.75, label='true / denoised')
-        ax.plot(cfreqs, -true_cemf[cfreqsize:], 'C0--', linewidth=0.75)
-        ax.plot(freqs, true_emf[freqsize:], 'C0', marker='.', linewidth=0)
-        ax.plot(freqs, -true_emf[freqsize:], 'C0', marker='.', linewidth=0)
-
-        ax.plot(cfreqs, pred_cemf[cfreqsize:], 'C1', linewidth=0.75, label='predicted / denoised')
-        ax.plot(cfreqs, -pred_cemf[cfreqsize:], 'C1--', linewidth=0.75)
-        ax.plot(freqs, pred_emf[freqsize:], 'C1', marker='+', linewidth=0)
-        ax.plot(freqs, -pred_emf[freqsize:], 'C1', marker='+', linewidth=0)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.legend()
-        ax.set_xlabel('Frequecy (Hz)')
-        ax.set_ylabel('Secondary field $h_z$ (ppm)')
-        ax.grid(which='major',color='#ccc',linestyle='-')
-        ax.grid(which='minor',color='#eee',linestyle='--')
-        ax.set_title('Imaginary Part')
+            ax.legend()
+            ax.set_xlim(cfreqs[0], cfreqs[-1])
+            ax.set_ylim(1e-4, 1e8)
+            ax.set_xlabel('Frequecy (Hz)')
+            ax.set_ylabel('Secondary field $h_z$ (ppm)')
+            ax.grid(which='major',color='#ccc',linestyle='-')
+            #ax.grid(which='minor',color='#eee',linestyle='')
+        ax1.set_title('Real Part')
+        ax2.set_title('Imaginary Part')
 
     @staticmethod
     def emfield_error(ax1, ax2, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=False):
