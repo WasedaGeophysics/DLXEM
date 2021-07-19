@@ -19,10 +19,10 @@ class resolve:
         cfreqs = np.logspace(cfreq_min, cfreq_max, cfreq_size)
         freq_size = len(freqs)
 
-        true_emf = forward.resolve(thicks, true_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
-        pred_emf = forward.resolve(thicks, pred_res, height, span, freqs, add_noise=noised, to_ppm=ppm)
-        true_cemf = forward.resolve(thicks, true_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
-        pred_cemf = forward.resolve(thicks, pred_res, height, span, cfreqs, add_noise=noised, to_ppm=ppm)
+        true_emf = forward.resolve(thicks, true_res, height, span, freqs, add_noise=False, to_ppm=ppm)
+        pred_emf = forward.resolve(thicks, pred_res, height, span, freqs, add_noise=False, to_ppm=ppm)
+        true_cemf = forward.resolve(thicks, true_res, height, span, cfreqs, add_noise=False, to_ppm=ppm)
+        pred_cemf = forward.resolve(thicks, pred_res, height, span, cfreqs, add_noise=False, to_ppm=ppm)
 
         if ppm == False:
             primary_field = -1 / (4 * np.pi * span ** 3)
