@@ -4,16 +4,14 @@ class Subsurface1D:
     """
     地下構造（層厚, 比抵抗）を決定する
     """
-    def __init__(self, thicks, mode):
+    def __init__(self, thicks, rmean, rscat, mode):
         self.thickness = thicks
         self.res_min = 1e-1
         self.res_max = 1e5
+        self.rmean = rmean
+        self.rscat = rscat
         if mode == 'smooth_mix':
             self.resistivity = self.smooth_mix()
-        elif mode == 'smooth_normal':
-            self.resistivity = self.smooth_normal()
-        elif mode == 'smooth_uniform':
-            self.resistivity = self.smooth_uniform()
         elif mode == 'ymtmt':
             self.resistivity = np.array(self.ymtmt())
         elif mode == 'normal':
@@ -47,52 +45,7 @@ class Subsurface1D:
         res = 10 ** exponent
         return res
 
-    def smooth_normal(self):
-        size = len(self.thickness) + 1
-        # Random Auto Configuration
-        fixed, activation = np.random.randint(0, 2, 2)
-        # 移動平均による平滑化の回数
-        smooth_iter = np.random.choice([3, 5, 7, 9, 10, 20])
-        # 層数分の指数を乱数生成
-        exponent = np.random.randn(size) + 2
-
-        # 初期値の固定点を第1層からn-1層までの間に１点設ける（確率で異常値付与）
-        exponent0 = exponent.copy()
-        fixed_index = np.random.randint(1, size-1)
-        for i in range(smooth_iter):
-            exponent = self.movearg(exponent)
-            if fixed and ((smooth_iter - i) <= 2):
-                exponent[fixed_index] = exponent0[fixed_index]
-
-        # 活性化
-        if activation:
-            exponent = exponent + 0.6 * np.tanh((exponent - 2) / 3)
-        res = 10 ** exponent
-        return res
-
-    def smooth_uniform(self):
-        size = len(self.thickness) + 1
-        # Random Auto Configuration
-        fixed, activation = np.random.randint(0, 2, 2)
-        # 移動平均による平滑化の回数
-        smooth_iter = np.random.choice([3, 5, 7, 9, 10, 20])
-        # 層数分の指数を乱数生成
-        exponent = np.log10(self.res_max/self.res_min) * np.random.rand(size) + np.log10(self.res_min)
-
-        # 初期値の固定点を第1層からn-1層までの間に１点設ける（確率で異常値付与）
-        exponent0 = exponent.copy()
-        fixed_index = np.random.randint(1, size-1)
-        for i in range(smooth_iter):
-            exponent = self.movearg(exponent)
-            if fixed and ((smooth_iter - i) <= 2):
-                exponent[fixed_index] = exponent0[fixed_index]
-
-        # 活性化
-        if activation:
-            exponent = exponent + 0.6 * np.tanh((exponent - 2) / 3)
-        res = 10 ** exponent
-        return res  
-
+   
     def ymtmt(self):
         layer_num = len(self.thickness)
         # 実質、何層構造か決める
@@ -117,9 +70,9 @@ class Subsurface1D:
         exponent = np.array([])
         # 移動平均による平滑化の回数
         smooth_iter = np.random.choice([0, 0, 1, 1, 5])
-        abnormal_std = [0.7, 1.0]
-        natural_std = [0.1, 0.5]
-        level = 2.4 * np.random.rand() - 1.2
+        abnormal_std = [0.7, 1.0, 1.3]
+        natural_std = [0.1, 0.3, 0.5]
+        level = self.rmean + 2.0 * self.rscat * (np.random.rand() - 0.5)
         while True:
             count = len(exponent)
             empty = size - count

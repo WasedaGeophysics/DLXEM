@@ -7,10 +7,12 @@ from dlxem import forward as fwd
 class Resolve1D:
     def __init__(
             self, 
-            thicks, height_range, freqs, span,
+            thicks, rmean, rscat, height_range, freqs, span,
             to_ppm=True, add_noise=False, noise_level=None,
-            random_mode='ymtmt'):
+            random_mode='normal'):
         self.thicks = thicks
+        self.rmean = rmean
+        self.rscat = rscat
         self.height_range = height_range
         self.freqs = freqs
         self.span = span
@@ -38,7 +40,7 @@ class Resolve1D:
 
         for i in iters:
             # 層厚固定で比抵抗構造をランダム生成
-            hml = sf.Subsurface1D(self.thicks, self.random_mode)
+            hml = sf.Subsurface1D(self.thicks, self.rmean, self.rscat, self.random_mode)
 
             #曳航高度をランダム生成
             height = (height_max - height_min) * np.random.rand() + height_min

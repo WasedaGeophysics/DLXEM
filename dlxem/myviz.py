@@ -98,11 +98,15 @@ class resolve:
                 cemf_err_p.append(err)
                 cemf_err_n.append(0)
 
-        if noised:
-            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0, label='true / original noised')
-            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0)
-            ax2.plot(freqs, orig_emf[freqsize:], 'C2', marker='x', linewidth=0, label='true / original noised')
-            ax2.plot(freqs, -orig_emf[freqsize:], 'C2', marker='x', linewidth=0)
+        ax1b = ax1.twinx()
+        ax2b = ax2.twinx()
+
+        ax1b.bar(cfreqs, cemf_err_p[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
+        ax1b.bar(cfreqs, cemf_err_n[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3)
+        ax1b.plot(freqs, emf_err[:freqsize], c='#8ed', marker='.', linewidth=0)
+        ax2b.bar(cfreqs, cemf_err_p[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
+        ax2b.bar(cfreqs, cemf_err_n[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3)
+        ax2b.plot(freqs, emf_err[freqsize:], c='#8ed', marker='.', linewidth=0)
 
         ax1.plot(cfreqs, true_cemf[:cfreqsize], 'k', linewidth=0.75, label='true / denoised')
         ax1.plot(cfreqs, -true_cemf[:cfreqsize], 'k', linewidth=0.75)
@@ -122,15 +126,11 @@ class resolve:
         ax2.plot(freqs, pred_emf[freqsize:], 'r', marker='+', linewidth=0)
         ax2.plot(freqs, -pred_emf[freqsize:], 'r', marker='+', linewidth=0)
 
-        ax1b = ax1.twinx()
-        ax2b = ax2.twinx()
-
-        ax1b.bar(cfreqs, cemf_err_p[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
-        ax1b.bar(cfreqs, cemf_err_n[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3)
-        ax1b.plot(freqs, emf_err[:freqsize], c='#8ed', marker='.', linewidth=0)
-        ax2b.bar(cfreqs, cemf_err_p[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
-        ax2b.bar(cfreqs, cemf_err_n[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3)
-        ax2b.plot(freqs, emf_err[freqsize:], c='#8ed', marker='.', linewidth=0)
+        if noised:
+            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0, label='true / original noised')
+            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0)
+            ax2.plot(freqs, orig_emf[freqsize:], 'C2', marker='x', linewidth=0, label='true / original noised')
+            ax2.plot(freqs, -orig_emf[freqsize:], 'C2', marker='x', linewidth=0)
 
         for ax in [ax1b, ax2b]:
             ax.set_ylim(0, 300)
