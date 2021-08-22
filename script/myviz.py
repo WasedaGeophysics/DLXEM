@@ -1,17 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from dlxem import forward
+from script import forward
 
 class resolve:
     #== SUMPLOT =========================#
     @classmethod
     def sumplot(cls, thicks, pred_res, true_res, height, span, freqs, cfreq_range, orig_emf, ppm=True, noised=False, log_depth=False):
+        plt.rcParams["font.size"] = 13
+        plt.tight_layout()
         fig = plt.figure(figsize=(25, 7), dpi=100)
         ax1 = fig.add_subplot(1,3,1)
         ax2 = fig.add_subplot(1,3,2)
         ax3 = fig.add_subplot(1,3,3)
 
-        cls.resistivity_step(ax1, thicks, pred_res, true_res, log_depth=log_depth)
+        cls.resistivity_step(ax1, thicks, pred_res, true_res, height, log_depth=log_depth)
 
         cfreq_min = cfreq_range[0]
         cfreq_max = cfreq_range[1]
@@ -36,7 +38,7 @@ class resolve:
         return fig
 
     @staticmethod
-    def resistivity_step(ax, thicks, pred_res, true_res, log_depth=False):
+    def resistivity_step(ax, thicks, pred_res, true_res, height, log_depth=False):
         thicks_add = [*thicks, thicks[-1]]
         thicks_add2 = [*thicks_add, 1]
         depth = [1e-5, *np.cumsum(thicks_add)]
@@ -54,8 +56,8 @@ class resolve:
                 abs_err_p.append(err)
                 abs_err_n.append(0)
 
-        ax.barh(depth, abs_err_p, thicks_add2, align='edge', color='#8ed', edgecolor='#8ed', alpha=0.3, label='difference')
-        ax.barh(depth, abs_err_n, thicks_add2, align='edge', color='#8ed', edgecolor='#8ed', alpha=0.3)
+        ax.barh(depth, abs_err_p, thicks_add2, align='edge', color='#8df', edgecolor='#8df', alpha=0.3, label='difference')
+        ax.barh(depth, abs_err_n, thicks_add2, align='edge', color='#8df', edgecolor='#8df', alpha=0.3)
         ax.set_xscale('log')
         ax.set_xlim(1e-2, 1e6)
         ax.set_xlabel('difference of resistivity ${\mathrm{(\Omega \cdot m)}}$')
@@ -75,7 +77,7 @@ class resolve:
         ax.grid(which='major',color='#ccc',linestyle='-')
         ax.grid(which='minor',color='#eee',linestyle='--')
         ax.legend(loc='lower right')
-        ax.set_title('${ρ_{\mathrm{pred}}}$ and ${ρ_{\mathrm{true}}}$')
+        ax.set_title('Resistivity Structure (height : {} m)'.format(round(height, 2)))
 
     @staticmethod
     def emfield(ax1, ax2, freqs, cfreqs, pred_emf, true_emf, pred_cemf, true_cemf, orig_emf, noised=False):
@@ -101,36 +103,36 @@ class resolve:
         ax1b = ax1.twinx()
         ax2b = ax2.twinx()
 
-        ax1b.bar(cfreqs, cemf_err_p[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
-        ax1b.bar(cfreqs, cemf_err_n[:cfreqsize], thicks, align='edge', color='#8ed', alpha=0.3)
-        ax1b.plot(freqs, emf_err[:freqsize], c='#8ed', marker='.', linewidth=0)
-        ax2b.bar(cfreqs, cemf_err_p[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3, label='Relative Error')
-        ax2b.bar(cfreqs, cemf_err_n[cfreqsize:], thicks, align='edge', color='#8ed', alpha=0.3)
-        ax2b.plot(freqs, emf_err[freqsize:], c='#8ed', marker='.', linewidth=0)
+        ax1b.bar(cfreqs, cemf_err_p[:cfreqsize], thicks, align='edge', color='#8df', alpha=0.3, label='Relative Error')
+        ax1b.bar(cfreqs, cemf_err_n[:cfreqsize], thicks, align='edge', color='#8df', alpha=0.3)
+        ax1b.plot(freqs, emf_err[:freqsize], c='#8df', marker='.', linewidth=0)
+        ax2b.bar(cfreqs, cemf_err_p[cfreqsize:], thicks, align='edge', color='#8df', alpha=0.3, label='Relative Error')
+        ax2b.bar(cfreqs, cemf_err_n[cfreqsize:], thicks, align='edge', color='#8df', alpha=0.3)
+        ax2b.plot(freqs, emf_err[freqsize:], c='#8df', marker='.', linewidth=0)
 
-        ax1.plot(cfreqs, true_cemf[:cfreqsize], 'k', linewidth=0.75, label='true / denoised')
+        ax1.plot(cfreqs, true_cemf[:cfreqsize], 'k', linewidth=0.75, label='label / denoised')
         ax1.plot(cfreqs, -true_cemf[:cfreqsize], 'k', linewidth=0.75)
         ax1.plot(freqs, true_emf[:freqsize], 'k', marker='.', linewidth=0)
         ax1.plot(freqs, -true_emf[:freqsize], 'k', marker='.', linewidth=0)
-        ax2.plot(cfreqs, true_cemf[cfreqsize:], 'k', linewidth=0.75, label='true / denoised')
+        ax2.plot(cfreqs, true_cemf[cfreqsize:], 'k', linewidth=0.75, label='label / denoised')
         ax2.plot(cfreqs, -true_cemf[cfreqsize:], 'k', linewidth=0.75)
         ax2.plot(freqs, true_emf[freqsize:], 'k', marker='.', linewidth=0)
         ax2.plot(freqs, -true_emf[freqsize:], 'k', marker='.', linewidth=0)
 
-        ax1.plot(cfreqs, pred_cemf[:cfreqsize], 'r', linewidth=0.75, label='predicted / denoised')
+        ax1.plot(cfreqs, pred_cemf[:cfreqsize], 'r', linewidth=0.75, label='predict / denoised')
         ax1.plot(cfreqs, -pred_cemf[:cfreqsize], 'r', linewidth=0.75)
         ax1.plot(freqs, pred_emf[:freqsize], 'r', marker='+', linewidth=0)
         ax1.plot(freqs, -pred_emf[:freqsize], 'r', marker='+', linewidth=0)
-        ax2.plot(cfreqs, pred_cemf[cfreqsize:], 'r', linewidth=0.75, label='predicted / denoised')
+        ax2.plot(cfreqs, pred_cemf[cfreqsize:], 'r', linewidth=0.75, label='predict / denoised')
         ax2.plot(cfreqs, -pred_cemf[cfreqsize:], 'r', linewidth=0.75)
         ax2.plot(freqs, pred_emf[freqsize:], 'r', marker='+', linewidth=0)
         ax2.plot(freqs, -pred_emf[freqsize:], 'r', marker='+', linewidth=0)
 
         if noised:
-            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0, label='true / original noised')
-            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', linewidth=0)
-            ax2.plot(freqs, orig_emf[freqsize:], 'C2', marker='x', linewidth=0, label='true / original noised')
-            ax2.plot(freqs, -orig_emf[freqsize:], 'C2', marker='x', linewidth=0)
+            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', markersize=10, linewidth=0, label='label / original noised')
+            ax1.plot(freqs, orig_emf[:freqsize], 'C2', marker='x', markersize=10, linewidth=0)
+            ax2.plot(freqs, orig_emf[freqsize:], 'C2', marker='x', markersize=10, linewidth=0, label='label / original noised')
+            ax2.plot(freqs, -orig_emf[freqsize:], 'C2', marker='x', markersize=10, linewidth=0)
 
         for ax in [ax1b, ax2b]:
             ax.set_ylim(0, 300)

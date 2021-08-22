@@ -1,5 +1,5 @@
 import numpy as np
-from dlxem import w1dem as w1
+from script import w1dem as w1
 
 def resolve(thickness, resistivity, height, span, freqs,
          add_noise=True, to_ppm=True, noise_level=[10, 10, 20, 40, 50]):

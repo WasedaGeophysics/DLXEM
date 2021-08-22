@@ -83,7 +83,7 @@ class Subsurface1D:
                     normal_std = np.random.choice(abnormal_std)
                 else:
                     normal_std = np.random.choice(natural_std)
-                exp_add = np.ones(fill) * (np.random.normal(level, normal_std) + 2)
+                exp_add = np.ones(fill) * (np.random.normal(level, normal_std))
                 exponent = np.append(exponent, exp_add)
                 empty -= fill
             else:

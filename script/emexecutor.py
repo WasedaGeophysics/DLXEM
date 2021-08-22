@@ -1,8 +1,8 @@
 import numpy as np
 from multiprocessing import Pool, cpu_count
 from concurrent import futures
-from dlxem import subsurface as sf
-from dlxem import forward as fwd
+from script import subsurface as sf
+from script import forward as fwd
 
 class Resolve1D:
     def __init__(
