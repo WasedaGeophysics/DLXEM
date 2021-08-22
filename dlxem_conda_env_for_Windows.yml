@@ -1,4 +1,4 @@
-name: dlxem
+name: emdlenv
 channels:
   - defaults
 dependencies:
