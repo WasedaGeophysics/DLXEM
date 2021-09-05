@@ -1,4 +1,29 @@
+# Subsurface Modeling Kits
 import numpy as np
+import matplotlib.pyplot as plt
+
+def tmake(init_thick, last_depth, nlayer, mode):
+    if mode == 'log':
+        depth = np.logspace(np.log10(init_thick), np.log10(last_depth), nlayer-1)
+        depth = np.append([0], depth)
+        thicks = []
+        for i in range(nlayer-1):
+            thicks.append(depth[i+1]-depth[i])
+    elif mode == 'linear':
+        depth = np.linspace(init_thick, last_depth, nlayer-1)
+        depth = np.append([0], depth)
+        thicks = []
+        for i in range(nlayer-1):
+            thicks.append(depth[i+1]-depth[i])
+    return thicks
+
+def dmake(thicks):
+    depth = np.hstack([[0], np.cumsum(thicks)])
+    return depth
+
+def show_structure(depth):
+    fig = plt.figure(figsize=(12,3))
+    
 
 def resistivity1D(thicks, brlim, model_generator):
     """
@@ -70,3 +95,4 @@ def movearg(x):
         for i in range(edge, length-edge):
             y[i] = sum(x[i-edge:i+edge+1])/span
     return y
+
