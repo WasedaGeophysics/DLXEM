@@ -1,15 +1,16 @@
 # Subsurface Modeling Kits
 import numpy as np
 import matplotlib.pyplot as plt
+from ipywidgets import IntSlider, interact, Layout
 
-def tmake(init_thick, last_depth, nlayer, mode):
-    if mode == 'log':
+def tmake(init_thick, last_depth, nlayer, scale):
+    if scale == 'log':
         depth = np.logspace(np.log10(init_thick), np.log10(last_depth), nlayer-1)
         depth = np.append([0], depth)
         thicks = []
         for i in range(nlayer-1):
             thicks.append(depth[i+1]-depth[i])
-    elif mode == 'linear':
+    elif scale == 'linear':
         depth = np.linspace(init_thick, last_depth, nlayer-1)
         depth = np.append([0], depth)
         thicks = []
@@ -21,18 +22,60 @@ def dmake(thicks):
     depth = np.hstack([[0], np.cumsum(thicks)])
     return depth
 
-def show_structure(depth):
-    fig = plt.figure(figsize=(12,3))
+def show_structure(thickness, depth):
+    print('層境界深度 (m)')
+    for i in range(len(depth)):
+        if (i+1) % 10 == 0:
+            eol = ' | \n'
+        else:
+            eol = ' | '
+        char = "{:7,.3f}".format(depth[i])
+        print(char ,end=eol)
+    print('層厚 (m)')
+    for i in range(len(thickness)):
+        if (i+1) % 10 == 0:
+            eol = ' | \n'
+        else:
+            eol = ' | '
+        char = "{:7,.3f}".format(thickness[i])
+        print(char ,end=eol)
+    print('infinity|')
+
+    def show_layers(ulim):
+        fig = plt.figure(figsize=(15,8))
+        ax = fig.add_subplot(1,1,1)
+        plt.rcParams["font.size"] = 18
+        plt.tight_layout()
+        ax.pcolormesh(x,y,z,cmap='copper')
+        ax.set_ylabel('depth [m]')
+        ax.set_ylim(-1, y[ulim])
+        ax.invert_yaxis()
+        ax.axes.xaxis.set_ticks([])
+        plt.show()
+
+
+    x = np.array([0,1])
+    y = np.array([*depth, 1.05*depth[-1]])
+    z = np.log(np.array([depth]).T + 10)
+    ld = len(depth)
+    m = ld // 2
+    for i in range(m):
+        z[2*i,0] *= 2
+    z = 1/z
+
+    ulim = IntSlider(value = ld, min=1, max=ld, step=1, description="~ Layer No.",
+                        layout=Layout(width='100%'))
+    interact(show_layers, ulim=ulim);
     
 
-def resistivity1D(thicks, brlim, model_generator):
+def resistivity1D(thicks, brlim, generate_mode):
     """
     thicks : list, array-like
         list of thickness in each layer
     brlim : list [min, max]
         limits of resistivity range (Ohm-m)
     """
-    if model_generator == "default":
+    if generate_mode == "default":
         size = len(thicks) + 1
         lower = np.log10(brlim[0])
         upper = np.log10(brlim[1])
@@ -76,6 +119,49 @@ def resistivity1D(thicks, brlim, model_generator):
         for i in range(smooth_iter):
             exponent = movearg(exponent)
         res = 10 ** exponent
+        return res
+
+    elif generate_mode == 'ymtmt':
+        layer_num = len(thicks) + 1
+        # 実質、何層構造か決める
+        def random_resistivity_logscale(self, num):
+            """
+            対数間隔でランダムに乱数を生成する
+            :return:
+            """
+            res_index = np.log10(self.res_max / self.res_min) * np.random.rand(num) + np.log10(self.res_min)
+            res = 10 ** res_index
+            return list(res)
+        def random_int_nolap(divider_num, layer_num):
+            """
+            ダブりなしのint型乱数を生成する
+            :param num:
+            :return:
+            """
+            random_list = []
+            list_num = 0
+            while list_num < divider_num:
+                random = np.random.randint(1, layer_num+1)
+                if random not in random_list:
+                    random_list.append(random)
+                list_num = len(random_list)
+            random_list.sort()
+            return random_list
+        
+        thickness_num = np.random.randint(1, 4)
+        if thickness_num == 1:
+            res = random_resistivity_logscale(1) * layer_num
+        elif thickness_num == 2:
+            divider = np.random.randint(1, layer_num, 1)
+            res = random_resistivity_logscale(1) * divider[0] + random_resistivity_logscale(1) * (layer_num - divider[0])
+        elif thickness_num == 3:
+            divider = random_int_nolap(thickness_num, layer_num)
+            res = random_resistivity_logscale(1) * divider[0]\
+                + random_resistivity_logscale(1) * (divider[1] - divider[0])\
+                + random_resistivity_logscale(1) * (layer_num - divider[1])
+        else:
+            print('layer num error!')
+            res = None
         return res
     
 def movearg(x):

@@ -1,7 +1,15 @@
+# needless dir
+
+
 #DB
 bookpurnong/
 RESOLVE_TOHOKU_JP/
 bp_resolve/
+
+#pyinstaller
+build/
+dist/
+
 
 #environment
 environment/tnishino
