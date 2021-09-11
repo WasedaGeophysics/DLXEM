@@ -1,20 +1,3 @@
-# needless dir
-
-
-#DB
-bookpurnong/
-RESOLVE_TOHOKU_JP/
-bp_resolve/
-
-#pyinstaller
-build/
-dist/
-
-
-#environment
-environment/tnishino
-environment/test
-
 #file
 Bookpurnong_Resolve_Exported.XYZ
 
@@ -39,8 +22,6 @@ Archive/
 *.png
 *.jpg
 *.gif
-
-*.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
