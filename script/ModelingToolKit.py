@@ -90,9 +90,9 @@ def resistivity1D(thicks, brlim, generate_mode):
         mu = np.log(m*k**(2/3))
         n = int(size//50) + 1
 
-        smooth_iter = np.random.choice([1, 1, 1, 2, 5]) * n
-        abnormal_std = [0.5, 0.8]
-        natural_std = [0.1, 0.3]
+        smooth_iter = np.random.choice([0, 0, 1, 1, 1, 2, 5]) * n
+        abnormal_std = [0.8, 1.0, 1.2]
+        natural_std = [0.1, 0.3, 0.5]
         while True:
             count = len(altres)
             empty = size - count
