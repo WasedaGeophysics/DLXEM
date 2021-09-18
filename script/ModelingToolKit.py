@@ -1,4 +1,5 @@
 # Subsurface Modeling Kits
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from ipywidgets import IntSlider, interact, Layout
@@ -90,9 +91,9 @@ def resistivity1D(thicks, brlim, generate_mode):
         mu = np.log(m*k**(2/3))
         n = int(size//50) + 1
 
-        smooth_iter = np.random.choice([0, 0, 1, 1, 1, 2, 5]) * n
+        smooth_iter = np.random.choice([1, 1, 2]) * int(n ** 1.5)
         abnormal_std = [0.8, 1.0, 1.2]
-        natural_std = [0.1, 0.3, 0.5]
+        natural_std = [0.1]
         while True:
             count = len(altres)
             empty = size - count
@@ -103,7 +104,7 @@ def resistivity1D(thicks, brlim, generate_mode):
             if fill == 0:
                 continue
             if fill <= empty:
-                abnormal = np.random.choice([False, True], p=[0.7, 0.3])
+                abnormal = np.random.choice([False, True], p=[0.8, 0.2])
                 if abnormal:
                     normal_std = np.random.choice(abnormal_std)
                 else:
@@ -132,6 +133,7 @@ def resistivity1D(thicks, brlim, generate_mode):
             res_index = np.log10(self.res_max / self.res_min) * np.random.rand(num) + np.log10(self.res_min)
             res = 10 ** res_index
             return list(res)
+        
         def random_int_nolap(divider_num, layer_num):
             """
             ダブりなしのint型乱数を生成する
@@ -163,6 +165,22 @@ def resistivity1D(thicks, brlim, generate_mode):
             print('layer num error!')
             res = None
         return res
+
+    elif generate_mode == 'bgan':
+        # ベースを決める
+        base_divide = np.random.choice([1,2,3])
+        nlayer = len(thicks) + 1
+        layer_nlist = [i for i in range(1, nlayer)]
+        ndiv = [0] + list(np.sort(random.sample(layer_nlist, base_divide-1)))
+        base_res = np.zeros(nlayer)
+        lower = np.log10(brlim[0])
+        upper = np.log10(brlim[1])
+        for i in range(base_divide):
+            if i == base_divide-1:
+                base_res[ndiv[i]:] = [np.random.rand() * (upper - lower) + lower] * (nlayer - ndiv[i])
+            base_res[ndiv[i]:ndiv[i+1]] = [np.random.rand() * (upper - lower) + lower] * (ndiv[i+1] - ndiv[i])
+        nano = np.random.randint(0,5)
+
     
 def movearg(x):
     span = 3
@@ -181,4 +199,3 @@ def movearg(x):
         for i in range(edge, length-edge):
             y[i] = sum(x[i-edge:i+edge+1])/span
     return y
-

@@ -60,7 +60,7 @@ class Resolve1D:
             if self.bhinx:
                 xy = np.r_[resp, self.height, self.resistivity]
             else:
-                xy = np.r_[resp, self.resistivity]
+                xy = np.r_[resp, self.height, self.resistivity]
 
             xy_list.append(xy)
         

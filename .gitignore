@@ -12,6 +12,7 @@ Archive/
 .ipynb_checkpoints/
 
 # MyPython
+lab/
 
 # data
 *.json
