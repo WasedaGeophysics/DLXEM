@@ -125,12 +125,12 @@ def resistivity1D(thicks, brlim, generate_mode):
     elif generate_mode == 'ymtmt':
         layer_num = len(thicks) + 1
         # 実質、何層構造か決める
-        def random_resistivity_logscale(self, num):
+        def random_resistivity_logscale(num):
             """
             対数間隔でランダムに乱数を生成する
             :return:
             """
-            res_index = np.log10(self.res_max / self.res_min) * np.random.rand(num) + np.log10(self.res_min)
+            res_index = np.log10(brlim[1] / brlim[0]) * np.random.rand(num) + np.log10(brlim[0])
             res = 10 ** res_index
             return list(res)
         
