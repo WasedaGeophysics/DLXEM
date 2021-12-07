@@ -3,7 +3,7 @@ from script.emulatte import forward as fwd
 
 def emulatte_RESOLVE(
         thicks, resistivity, freqs, nfreq, spans, height, 
-        vca_index=3, add_noise=False, noise_level=None
+        vca_index=None, add_noise=False, noise_ave=None, noise_std=None
         ):
         """
         return : ndarray 
@@ -15,11 +15,12 @@ def emulatte_RESOLVE(
         #フォワード計算
         tc = [0, 0, -height]
         hankel_filter = 'werthmuller201'
-        dipole_moment = 1
+        moment = 1
         displacement_current = False
+        res = np.append(2e14, resistivity)
 
         model = fwd.model(thicks)
-        model.add_resistivity(resistivity)
+        model.set_properties(res=res)
     
         fields = []
         primary_fields = []
@@ -29,18 +30,20 @@ def emulatte_RESOLVE(
         for i in range(nfreq):
             f = np.array([freqs[i]])
             rc = [-spans[i], 0, -height]
+            # VCAあり
             if (nfreq == 6) and (i ==  vca_index):
-                hmdx = fwd.transmitter("HMDx", f, dipole_moment=dipole_moment)
+                hmdx = fwd.transmitter("HMDx", f, moment=moment)
                 model.locate(hmdx, tc, rc)
-                resp, _ = model.emulate(hankel_filter=hankel_filter)
+                resp = model.emulate(hankel_filter=hankel_filter)
                 resp = resp['h_x'][0]
-                primary_field = dipole_moment / (2 * np.pi * spans[i] ** 3)
+                primary_field = moment / (2 * np.pi * spans[i] ** 3)
+            # VCAなし
             else:
-                vmd = fwd.transmitter("VMD", f, dipole_moment=dipole_moment)
+                vmd = fwd.transmitter("VMD", f, moment=moment)
                 model.locate(vmd, tc, rc)
-                resp, _ = model.emulate(hankel_filter=hankel_filter)
+                resp = model.emulate(hankel_filter=hankel_filter)
                 resp = resp['h_z'][0]
-                primary_field = - dipole_moment / (4 * np.pi * spans[i] ** 3)
+                primary_field = - moment / (4 * np.pi * spans[i] ** 3)
             fields.append(resp)
             primary_fields.append(primary_field)
 
@@ -56,10 +59,12 @@ def emulatte_RESOLVE(
         # bookpurnongのそれぞれの周波数のノイズレベル Christensen(2009)
 
         # ノイズ付加
-        if add_noise:
-            for index, nlv in enumerate(noise_level):
-                inphnoise = np.random.normal(0, nlv)
-                quadnoise = np.random.normal(0, nlv)
+        add = np.random.choice([True, False], p=[0.7, 0.3])
+        if (add_noise & add):
+            noise = [nlv for nlv in zip(noise_ave, noise_std)]
+            for index, nlv in enumerate(noise):
+                inphnoise = np.random.normal(nlv[0], nlv[1])
+                quadnoise = np.random.normal(nlv[0], nlv[1])
                 real_ppm[index] = real_ppm[index] + inphnoise
                 imag_ppm[index] = imag_ppm[index] + quadnoise
 

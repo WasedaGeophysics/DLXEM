@@ -24,7 +24,7 @@ def dmake(thicks):
     return depth
 
 def show_structure(thickness, depth):
-    print('層境界深度 (m)')
+    print('Layer Boundary Depth (m)')
     for i in range(len(depth)):
         if (i+1) % 10 == 0:
             eol = ' | \n'
@@ -32,7 +32,7 @@ def show_structure(thickness, depth):
             eol = ' | '
         char = "{:7,.3f}".format(depth[i])
         print(char ,end=eol)
-    print('層厚 (m)')
+    print('Layer Thickness (m)')
     for i in range(len(thickness)):
         if (i+1) % 10 == 0:
             eol = ' | \n'
@@ -41,33 +41,6 @@ def show_structure(thickness, depth):
         char = "{:7,.3f}".format(thickness[i])
         print(char ,end=eol)
     print('infinity|')
-
-    def show_layers(ulim):
-        fig = plt.figure(figsize=(15,8))
-        ax = fig.add_subplot(1,1,1)
-        plt.rcParams["font.size"] = 18
-        plt.tight_layout()
-        ax.pcolormesh(x,y,z,cmap='copper')
-        ax.set_ylabel('depth [m]')
-        ax.set_ylim(-1, y[ulim])
-        ax.invert_yaxis()
-        ax.axes.xaxis.set_ticks([])
-        plt.show()
-
-
-    x = np.array([0,1])
-    y = np.array([*depth, 1.05*depth[-1]])
-    z = np.log(np.array([depth]).T + 10)
-    ld = len(depth)
-    m = ld // 2
-    for i in range(m):
-        z[2*i,0] *= 2
-    z = 1/z
-
-    ulim = IntSlider(value = ld, min=1, max=ld, step=1, description="~ Layer No.",
-                        layout=Layout(width='100%'))
-    interact(show_layers, ulim=ulim);
-    
 
 def resistivity1D(thicks, brlim, generate_mode):
     """
@@ -166,20 +139,36 @@ def resistivity1D(thicks, brlim, generate_mode):
             res = None
         return res
 
-    elif generate_mode == 'bgan':
-        # ベースを決める
-        base_divide = np.random.choice([1,2,3])
-        nlayer = len(thicks) + 1
-        layer_nlist = [i for i in range(1, nlayer)]
-        ndiv = [0] + list(np.sort(random.sample(layer_nlist, base_divide-1)))
-        base_res = np.zeros(nlayer)
-        lower = np.log10(brlim[0])
-        upper = np.log10(brlim[1])
-        for i in range(base_divide):
-            if i == base_divide-1:
-                base_res[ndiv[i]:] = [np.random.rand() * (upper - lower) + lower] * (nlayer - ndiv[i])
-            base_res[ndiv[i]:ndiv[i+1]] = [np.random.rand() * (upper - lower) + lower] * (ndiv[i+1] - ndiv[i])
-        nano = np.random.randint(0,5)
+    elif generate_mode == 'TypeA':
+        # ©︎　20211108 tnishino
+        layer_num = len(thicks) + 1
+        L = np.arange(layer_num)
+        res = np.zeros(L.shape)
+
+        resmin = np.log10(brlim[0])
+        resmax = np.log10(brlim[1])
+
+        cut = np.random.randint(1,7)
+        brval = (resmax-resmin)*np.random.rand(cut+1) + resmin
+
+        Lnum = [i+1 for i in range(len(res))]
+        bound = np.random.choice(Lnum, cut)
+        bound.sort()
+
+        bi = 0
+        for i in range(layer_num):
+            res[i] = brval[bi]
+            if i in bound:
+                bi += 1
+
+        res0 = res.copy()
+        for i in range(layer_num):
+            res = movearg(res)
+
+        smooth = np.random.rand()
+        resexp = smooth*res+(1-smooth)*res0
+        res_arr = 10 ** resexp
+        return res_arr
 
     
 def movearg(x):

@@ -2,14 +2,14 @@ import numpy as np
 from multiprocessing import cpu_count
 from concurrent import futures
 from script import ModelingToolKit as mtk
-from script import EMforward as emf
+from script import emforward as emf
 
 class Resolve1D:
     def __init__(
             self, 
             size, thicks, bgrlim, bhlim, freqs, spans, vca_index=3,
-            add_noise=False, noise_level=None, generate_mode='default',
-            bhinx = True):
+            add_noise=False, noise_ave=None, noise_std=None, generate_mode='default',
+            ):
         self.size               = size
         # Geophysical subsurface model
         self.thicks             = thicks
@@ -22,13 +22,13 @@ class Resolve1D:
         self.spans = spans
         self.vca_index = vca_index
         # Preference
-        self.add_noise          = add_noise
-        self.noise_level        = noise_level
-        self.bhinx = bhinx
+        self.add_noise = add_noise
+        self.noise_ave = noise_ave
+        self.noise_std = noise_std
         
 
     def proceed(self):
-        # タスクはコア数の倍に設定
+        # タスクはコア数の倍に設定?
         ncpu = 20
         # CPUのコア数を最大プロセス数とする
         nsplit = cpu_count()
@@ -45,23 +45,19 @@ class Resolve1D:
 
         for i in iters:
             # 層厚固定で比抵抗構造をランダム生成
-            self.resistivity = mtk.resistivity1D(self.thicks, self.bgrlim, self.generate_mode)
+            resistivity = mtk.resistivity1D(self.thicks, self.bgrlim, self.generate_mode)
 
             #曳航高度をランダム生成
-            self.height = (self.bhlim[1]-self.bhlim[0]) * np.random.rand() + self.bhlim[0]
+            height = (self.bhlim[1]-self.bhlim[0]) * np.random.rand() + self.bhlim[0]
 
             #RESOLVEのノイズ付応答を計算
             resp = emf.emulatte_RESOLVE(
-                self.thicks, self.resistivity, self.freqs, self.nfreq, self.spans, self.height,
-                vca_index=self.vca_index, add_noise=self.add_noise, noise_level=self.noise_level
+                self.thicks, resistivity, self.freqs, self.nfreq, self.spans, height,
+                vca_index=self.vca_index, add_noise=self.add_noise, noise_ave=self.noise_ave, noise_std=self.noise_std
                 )
 
             #説明変数x, 目的変数yを格納
-            if self.bhinx:
-                xy = np.r_[resp, self.height, self.resistivity]
-            else:
-                xy = np.r_[resp, self.height, self.resistivity]
-
+            xy = np.r_[resp, height, resistivity]
             xy_list.append(xy)
         
         xy_list = np.array(xy_list)
