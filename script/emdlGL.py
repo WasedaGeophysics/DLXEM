@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import scipy.constants as const
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from ipywidgets import interact, widgets, interact_manual
+from IPython.display import display
 
 def loss_plot(hist_df, epochs):
     plt.rcParams["font.size"] = 10
@@ -20,3 +24,5 @@ def loss_plot(hist_df, epochs):
     ax1.grid()
     ax1.set_title('Loss Transition', fontsize = 12)
     plt.show()
+
+        

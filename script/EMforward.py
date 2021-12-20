@@ -1,5 +1,5 @@
 import numpy as np
-from script.emulatte import forward as fwd
+from .emulatte import forward as fwd
 
 def emulatte_RESOLVE(
         thicks, resistivity, freqs, nfreq, spans, height, 

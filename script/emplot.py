@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from script import emforward as emf
+from . import emforward as emf
 
 
 class ResolvePlot:

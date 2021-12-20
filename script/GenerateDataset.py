@@ -1,8 +1,8 @@
 import numpy as np
 from multiprocessing import cpu_count
 from concurrent import futures
-from script import ModelingToolKit as mtk
-from script import emforward as emf
+from . import ModelingToolKit as mtk
+from . import emforward as emf
 
 class Resolve1D:
     def __init__(
@@ -62,15 +62,3 @@ class Resolve1D:
         
         xy_list = np.array(xy_list)
         return xy_list
-
-class VTEM1D:
-    def __init__(self):
-        return None
-
-class SkyTEM1D:
-    def __init__(self):
-        return None
-
-class HeliTEM1D:
-    def __init__(self):
-        return None
