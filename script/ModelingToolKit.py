@@ -49,7 +49,7 @@ def resistivity1D(thicks, brlim, generate_mode):
     brlim : list [min, max]
         limits of resistivity range (Ohm-m)
     """
-    if generate_mode == "default":
+    if generate_mode == "normal":
         size = len(thicks) + 1
         lower = np.log10(brlim[0])
         upper = np.log10(brlim[1])
@@ -139,7 +139,7 @@ def resistivity1D(thicks, brlim, generate_mode):
             res = None
         return res
 
-    elif generate_mode == 'TypeA':
+    elif generate_mode == 'default':
         # ©︎　20211108 tnishino
         layer_num = len(thicks) + 1
         L = np.arange(layer_num)
